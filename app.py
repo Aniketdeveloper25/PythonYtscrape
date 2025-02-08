@@ -11,6 +11,10 @@ app = Flask(__name__)
 
 # Load API keys from environment variables
 YOUTUBE_API_KEY = os.environ.get("YOUTUBE_API_KEY")
+if not YOUTUBE_API_KEY:
+    raise ValueError("Missing YouTube API Key! Ensure you set the 'YOUTUBE_API_KEY' environment variable.")
+
+print(f"Loaded YouTube API Key: {YOUTUBE_API_KEY}")
 SERP_API_KEY = os.environ.get("SERP_API_KEY")
 
 # Check if API keys exist
