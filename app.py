@@ -83,14 +83,15 @@ def write_to_google_sheet(data):
         "type": "service_account",
         "project_id": os.environ.get("GOOGLE_PROJECT_ID"),
         "private_key_id": os.environ.get("GOOGLE_PRIVATE_KEY_ID"),
-        "private_key" = os.environ.get("GOOGLE_PRIVATE_KEY"),
+         private_key = os.environ.get("GOOGLE_PRIVATE_KEY")
 
-        if private_key is None:
-        raise ValueError("❌ GOOGLE_PRIVATE_KEY is not set. Please configure your environment variables."),
+         if private_key is None:
+         raise ValueError("❌ GOOGLE_PRIVATE_KEY is not set. Please configure your environment variables.")
 
-        creds_dict = {
-        "private_key": private_key.replace('\\n', '\n')
-        }
+         creds_dict = {
+         "private_key": private_key.replace('\\n', '\n')
+         }
+
 
         "client_email": os.environ.get("GOOGLE_CLIENT_EMAIL"),
         "client_id": os.environ.get("GOOGLE_CLIENT_ID"),
