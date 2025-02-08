@@ -56,7 +56,7 @@ def get_country_full_name(country_code):
 def write_to_google_sheet(data, sheet_name):
     scope = ["https://spreadsheets.google.com/feeds", 'https://www.googleapis.com/auth/drive']
     creds = ServiceAccountCredentials.from_json_keyfile_name(
-        r'C:\Users\anike\OneDrive\Desktop\Python Projects\my-youtube-api-project-449517-2eb9b32302b9.json', scope)  # Add Your JSON file Path Here...
+        r'\credentials.json', scope)  # Add Your JSON file Path Here...
     client = gspread.authorize(creds)  # Use 'client' for clarity
     try:
         sheet = client.open(sheet_name).sheet1
