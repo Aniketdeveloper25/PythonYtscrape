@@ -9,26 +9,29 @@ import pycountry
 
 app = Flask(__name__)
 
-# Replace with your API keys
-YOUTUBE_API_KEY = os.environ.get("YOUTUBE_API_KEY")  # Store API key in environment variables
-SERP_API_KEY = os.environ.get("SERP_API_KEY")  # Store API key in environment variables
+# API Keys (Stored in Environment Variables for Security)
+YOUTUBE_API_KEY = os.environ.get("YOUTUBE_API_KEY")
+SERP_API_KEY = os.environ.get("SERP_API_KEY")
 
-# Initialize the YouTube API client
+# Google Sheet ID (Replace with your actual Google Sheet ID)
+SHEET_ID = "1G1r-BGiPXV9j3qQzxjhWnLAS1j5PW8-eJjyHev6Zol8"  
+
+# Initialize YouTube API client
 youtube = googleapiclient.discovery.build("youtube", "v3", developerKey=YOUTUBE_API_KEY)
 
 def search_channels(keyword, max_results=10):
-    """Search for YouTube channels by keyword"""
+    """Search for YouTube channels by keyword."""
     try:
         request = youtube.search().list(q=keyword, part="snippet", type="channel", maxResults=max_results)
         response = request.execute()
-        print(f"✅ Found {len(response.get('items', []))} channels for '{keyword}'")  # Debug
+        print(f"✅ Found {len(response.get('items', []))} channels for '{keyword}'")  
         return response.get('items', [])
     except Exception as e:
         print(f"❌ Error fetching YouTube channels: {e}")
         return []
 
 def get_channel_details(channel_id):
-    """Fetch details for a YouTube channel"""
+    """Fetch details for a YouTube channel."""
     try:
         request = youtube.channels().list(part="snippet,statistics,brandingSettings", id=channel_id)
         return request.execute()['items'][0]
@@ -37,7 +40,7 @@ def get_channel_details(channel_id):
         return {}
 
 def search_social_media_links(channel_name):
-    """Find social media links using Google Search"""
+    """Find social media links using Google Search."""
     params = {
         "engine": "google",
         "q": f"{channel_name} Instagram OR Twitter OR Facebook OR LinkedIn OR Website",
@@ -51,7 +54,7 @@ def search_social_media_links(channel_name):
         return []
 
 def search_contact_email(channel_name):
-    """Find email contact for a channel"""
+    """Find email contact for a channel."""
     params = {"engine": "google", "q": f"{channel_name} contact email", "api_key": SERP_API_KEY}
     try:
         results = GoogleSearch(params).get_dict()
@@ -64,15 +67,15 @@ def search_contact_email(channel_name):
         return "Not found"
 
 def get_country_full_name(country_code):
-    """Convert country code to full name"""
+    """Convert country code to full name."""
     try:
         return pycountry.countries.get(alpha_2=country_code).name
     except:
         return "N/A"
 
-def write_to_google_sheet(data, sheet_name):
-    """Store extracted data in Google Sheets"""
-    print(f"📌 Attempting to write data to sheet: {sheet_name}")  # Debug
+def write_to_google_sheet(data):
+    """Store extracted data in Google Sheets using Sheet ID."""
+    print(f"📌 Writing data to Google Sheet ID: {SHEET_ID}")  
 
     scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
     
@@ -92,9 +95,9 @@ def write_to_google_sheet(data, sheet_name):
     try:
         creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
         client = gspread.authorize(creds)
-        sheet = client.open(sheet_name).sheet1  # Open first sheet
+        sheet = client.open_by_key(SHEET_ID).sheet1  # Open using Google Sheet ID
 
-        print("✅ Connected to Google Sheets successfully.")  # Debug
+        print("✅ Connected to Google Sheets.")  
 
         headers = [
             "Channel Name", "Channel URL", "Subscribers", "Total Views",
@@ -108,26 +111,25 @@ def write_to_google_sheet(data, sheet_name):
         if not first_row or first_row != headers:
             if first_row:  
                 sheet.delete_rows(1)  # Remove incorrect headers
-            sheet.insert_row(headers, 1)  # Insert correct headers
-            print("✅ Headers added successfully.")  # Debug
+            sheet.insert_row(headers, 1)  
+            print("✅ Headers added.")  
 
-        print(f"📌 Writing data: {data}")  # Debug
+        print(f"📌 Writing data: {data}")  
         sheet.append_row(data)
-        print("✅ Data successfully added to Google Sheets!")  # Debug
+        print("✅ Data added to Google Sheets!")  
 
     except gspread.exceptions.SpreadsheetNotFound:
-        print(f"❌ Error: Spreadsheet '{sheet_name}' not found.")  # Debug
+        print(f"❌ Error: Spreadsheet not found.")  
     except Exception as e:
-        print(f"❌ Error writing to Google Sheets: {e}")  # Debug
+        print(f"❌ Error writing to Google Sheets: {e}")  
 
 @app.route("/", methods=["GET", "POST"])
 def index():
     if request.method == "POST":
         keyword = request.form.get("keyword")
         max_results = int(request.form.get("max_results"))
-        sheet_name = request.form.get("sheet_name")
 
-        print(f"📌 Using Google Sheet: {sheet_name}")  # Debugging
+        print(f"📌 Searching YouTube for: {keyword}")  
 
         for channel in search_channels(keyword, max_results):
             channel_id = channel['id']['channelId']
@@ -172,8 +174,8 @@ def index():
                 search_contact_email(snippet['title'])
             ])
 
-            write_to_google_sheet(channel_data, sheet_name)
-            print(f"✅ Processed: {snippet['title']}")  # Debug
+            write_to_google_sheet(channel_data)
+            print(f"✅ Processed: {snippet['title']}")  
 
         return redirect(url_for("index"))
 
