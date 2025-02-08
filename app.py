@@ -14,7 +14,7 @@ YOUTUBE_API_KEY = os.environ.get("YOUTUBE_API_KEY")
 SERP_API_KEY = os.environ.get("SERP_API_KEY")
 
 # Google Sheet ID (Replace with your actual Google Sheet ID)
-SHEET_ID = "f342cd129214890afe6724137fd7a681af72b9d5"  
+SHEET_ID = "12I8W6gDmXrl5BIsnkYkyzyOJOx8Uh68ko0Fj4utZIrU"  
 
 # Initialize YouTube API client
 youtube = googleapiclient.discovery.build("youtube", "v3", developerKey=YOUTUBE_API_KEY)
