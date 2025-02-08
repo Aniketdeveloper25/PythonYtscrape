@@ -25,8 +25,13 @@ if not YOUTUBE_API_KEY or not SERP_API_KEY:
 youtube = googleapiclient.discovery.build("youtube", "v3", developerKey=YOUTUBE_API_KEY)
 
 def search_channels(keyword, max_results=10):
-    request = youtube.search().list(q=keyword, part="snippet", type="channel", maxResults=max_results)
-    return request.execute().get('items', [])
+    try:
+        request = youtube.search().list(q=keyword, part="snippet", type="channel", maxResults=max_results)
+        response = request.execute()
+        return response.get('items', [])
+    except Exception as e:
+        print(f"Error fetching channels: {e}")  # Debugging
+        return []
 
 def get_channel_details(channel_id):
     request = youtube.channels().list(part="snippet,statistics,brandingSettings", id=channel_id)
