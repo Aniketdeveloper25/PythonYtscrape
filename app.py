@@ -9,20 +9,25 @@ import pycountry
 
 app = Flask(__name__)
 
-# Replace with your API keys
-YOUTUBE_API_KEY = "AIzaSyAFyaAQp-cFs9K6C1EzJtTE7GaibUmLsAw"  # Your YouTube Data API v3 key
-SERP_API_KEY = "7d70d4fca0d3a38b50ed0a596ad68b4c1b2cf1b487db1d28e9abdbabd91ef040"  # Your SERP API key
+# Load API keys from environment variables
+YOUTUBE_API_KEY = os.environ.get("YOUTUBE_API_KEY")
+SERP_API_KEY = os.environ.get("SERP_API_KEY")
 
-# Initialize the YouTube API client
+# Check if API keys exist
+if not YOUTUBE_API_KEY or not SERP_API_KEY:
+    raise ValueError("Missing API keys. Ensure YOUTUBE_API_KEY and SERP_API_KEY are set as environment variables.")
+
+# Initialize YouTube API
 youtube = googleapiclient.discovery.build("youtube", "v3", developerKey=YOUTUBE_API_KEY)
 
 def search_channels(keyword, max_results=10):
     request = youtube.search().list(q=keyword, part="snippet", type="channel", maxResults=max_results)
-    return request.execute()['items']
+    return request.execute().get('items', [])
 
 def get_channel_details(channel_id):
     request = youtube.channels().list(part="snippet,statistics,brandingSettings", id=channel_id)
-    return request.execute()['items'][0]
+    response = request.execute().get('items', [])
+    return response[0] if response else None
 
 def search_social_media_links(channel_name):
     params = {
@@ -56,26 +61,29 @@ def get_country_full_name(country_code):
 
 def write_to_google_sheet(data, sheet_name):
     scope = ["https://spreadsheets.google.com/feeds", 'https://www.googleapis.com/auth/drive']
-    
+
     creds_dict = {
         "type": "service_account",
-        "project_id": os.environ.get('GOOGLE_PROJECT_ID'),
-        "private_key_id": os.environ.get('GOOGLE_PRIVATE_KEY_ID'),
-        "private_key": os.environ.get('GOOGLE_PRIVATE_KEY').replace('\\n', '\n'),
-        "client_email": os.environ.get('GOOGLE_CLIENT_EMAIL'),
-        "client_id": os.environ.get('GOOGLE_CLIENT_ID'),
+        "project_id": os.environ.get('GOOGLE_PROJECT_ID', ""),
+        "private_key_id": os.environ.get('GOOGLE_PRIVATE_KEY_ID', ""),
+        "private_key": os.environ.get('GOOGLE_PRIVATE_KEY', "").replace('\\n', '\n'),
+        "client_email": os.environ.get('GOOGLE_CLIENT_EMAIL', ""),
+        "client_id": os.environ.get('GOOGLE_CLIENT_ID', ""),
         "auth_uri": "https://accounts.google.com/o/oauth2/auth",
         "token_uri": "https://oauth2.googleapis.com/token",
         "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-        "client_x509_cert_url": f"https://www.googleapis.com/robot/v1/metadata/x509/{os.environ.get('GOOGLE_CLIENT_EMAIL')}"
+        "client_x509_cert_url": f"https://www.googleapis.com/robot/v1/metadata/x509/{os.environ.get('GOOGLE_CLIENT_EMAIL', '')}"
     }
 
-    creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
-    client = gspread.authorize(creds)
     try:
+        creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
+        client = gspread.authorize(creds)
         sheet = client.open(sheet_name).sheet1
     except gspread.exceptions.SpreadsheetNotFound:
-        print(f"Error: Spreadsheet '{sheet_name}' not found.")  # Handle spreadsheet not found
+        print(f"Error: Spreadsheet '{sheet_name}' not found. Ensure the service account has access.")
+        return
+    except Exception as e:
+        print(f"Google Sheets authentication failed: {e}")
         return
 
     headers = [
@@ -85,13 +93,12 @@ def write_to_google_sheet(data, sheet_name):
         "Other Links", "Email"
     ]
 
-    # Check for headers more reliably.  Get the first row.
-    first_row = sheet.row_values(1)  # Get the first row's values
-
-    if not first_row or first_row != headers:  # Check if the first row exists AND if it matches the headers
-        if first_row:  # Clear the first row if it exists but is incorrect
+    # Check if headers exist, else insert them
+    first_row = sheet.row_values(1)
+    if not first_row or first_row != headers:
+        if first_row:
             sheet.delete_rows(1)
-        sheet.insert_row(headers, 1)  # Insert headers at the beginning
+        sheet.insert_row(headers, 1)
 
     sheet.append_row(data)
 
@@ -102,9 +109,16 @@ def index():
         max_results = int(request.form.get("max_results"))
         sheet_name = request.form.get("sheet_name")
 
+        if not keyword or not sheet_name:
+            return "Error: Missing required input fields", 400
+
         for channel in search_channels(keyword, max_results):
             channel_id = channel['id']['channelId']
             details = get_channel_details(channel_id)
+
+            if not details:
+                continue  # Skip if no details found
+
             snippet = details['snippet']
             stats = details['statistics']
 
@@ -115,7 +129,7 @@ def index():
                 stats.get('subscriberCount', 'N/A'),
                 stats.get('viewCount', 'N/A'),
                 stats.get('videoCount', 'N/A'),
-                snippet['publishedAt'],
+                snippet.get('publishedAt', 'N/A'),
                 get_country_full_name(snippet.get('country', 'N/A')),
                 snippet.get('description', 'N/A')
             ]
