@@ -54,17 +54,22 @@
     </style>
 </head>
 <body>
-    <h1 style="text-align: center; background-color: cyan">YouTube Channel Scraper</h1>
+    <h1 style="text-align: center; color: aliceblue; margin-top: 100px; margin-bottom: 15px;">YouTube Channel Scraper</h1>
+    <p style="text-align: center; color: rgb(145, 145, 145); font-size: x-small; margin-bottom: 30px;">Created By Aniket Dhakate</p>
     <form action="/" method="POST">
         <label for="keyword">Keyword or Hashtag:</label>
-        <input type="text" id="keyword" name="keyword" required>
-
-        <label for="max_results">Number of Results:</label>
-        <input type="number" id="max_results" name="max_results" min="1" required>
-
-        <button type="submit">Scrape and Save</button>
+        <input type="text" id="keyword" placeholder="Enter any keyword" name="keyword" style="margin-left: -11px;">
+        
+        <label for="max_results" style="padding-left: -20px;">Number of Results:</label>
+        <input type="number" id="max_results" placeholder="Enter any number" name="max_results" style="margin-left: -11px;">
+        
+        <label for="sheet_name">Google Sheet Name:</label>
+        <input type="text" id="sheet_name" placeholder="Enter google sheet name" name="sheet_name" style="margin-left: -11px;">
+        
+        <button class="btn1" type="submit">Scrape and Save</button>
+        <button class="btn2" type="reset">Reset</button>
     </form>
-
+<p style="text-align: center; color: rgb(145,145,145); margin-top: 100px; font-size: small;">Copyright &copy; AniketYtScraper 2025 . All rights reserved.</p>
     {% if sheet_url %}
     <div id="sheet-container">
         <iframe src="{{ sheet_url }}"></iframe>
