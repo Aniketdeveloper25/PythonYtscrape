@@ -4,20 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>YouTube Channel Scraper</title>
-    <link rel="icon" type="image/x-icon" href="templates/logo.ico">
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: darkslategrey;
             margin: 20px;
         }
         form {
-            max-width: 450px;
-            margin: 0 auto;
+            max-width: 500px;
+            margin: 0 auto 20px auto;
             padding: 20px;
             border: 1px solid #ccc;
             border-radius: 10px;
-            background-color: lightcyan;
+            background-color: #f9f9f9;
         }
         input, button {
             width: 100%;
@@ -34,24 +32,52 @@
         button:hover {
             background-color: #0056b3;
         }
+        #sheet-container {
+            max-width: 1200px;
+            margin: 20px auto;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        #sheet-container.loaded {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        iframe {
+            width: 100%;
+            height: 600px;
+            border: none;
+        }
     </style>
 </head>
 <body>
-    <h1 style="text-align: center; color: aliceblue; margin-top: 100px; margin-bottom: 15px;">YouTube Channel Scraper</h1>
-    <p style="text-align: center; color: rgb(145, 145, 145); font-size: x-small; margin-bottom: 30px;">Created By Aniket Dhakate</p>
+    <h1 style="text-align: center;">YouTube Channel Scraper</h1>
     <form action="/" method="POST">
         <label for="keyword">Keyword or Hashtag:</label>
-        <input type="text" id="keyword" placeholder="Enter any keyword" name="keyword" style="margin-left: -11px;">
-        
-        <label for="max_results" style="padding-left: -20px;">Number of Results:</label>
-        <input type="number" id="max_results" placeholder="Enter any number" name="max_results" style="margin-left: -11px;">
-        
-        <label for="sheet_name">Google Sheet Name:</label>
-        <input type="text" id="sheet_name" placeholder="Enter google sheet name" name="sheet_name" style="margin-left: -11px;">
-        
-        <button class="btn1" type="submit">Scrape and Save</button>
-        <button class="btn2" type="reset">Reset</button>
+        <input type="text" id="keyword" name="keyword" required>
+
+        <label for="max_results">Number of Results:</label>
+        <input type="number" id="max_results" name="max_results" min="1" required>
+
+        <button type="submit">Scrape and Save</button>
     </form>
-    <p style="text-align: center; color: rgb(145,145,145); margin-top: 100px; font-size: small;">Copyright &copy; AniketYtScraper 2025 . All rights reserved.</p>
+
+    {% if sheet_url %}
+    <div id="sheet-container">
+        <iframe src="{{ sheet_url }}"></iframe>
+    </div>
+    {% endif %}
+
+    <script>
+        window.addEventListener('load', function() {
+            const sheetContainer = document.getElementById('sheet-container');
+            if(sheetContainer) {
+                sheetContainer.classList.add('loaded');
+            }
+        });
+    </script>
 </body>
 </html>
