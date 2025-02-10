@@ -17,7 +17,21 @@
             padding: 20px;
             border: 1px solid #ccc;
             border-radius: 10px;
-            background-color:lightcyan;
+            background-color: lightcyan;
+            opacity: 0; /* Start hidden */
+            animation: fadeInFromBottom 1s forwards; /* Fade in from bottom */
+            animation-delay: 0.4s; /* Increased delay for fade-in */
+        }
+
+        @keyframes fadeInFromBottom {
+            from {
+                opacity: 0; /* Start hidden */
+                transform: translateY(20px); /* Start from below */
+            }
+            to {
+                opacity: 1; /* Fully visible */
+                transform: translateY(0); /* Move to original position */
+            }
         }
         input, button {
             width: 100%;
